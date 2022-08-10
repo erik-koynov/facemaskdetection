@@ -117,9 +117,8 @@ def forward_roi_heads(
 
         result: List[Dict[str, torch.Tensor]] = []
         losses = {}
-        if self.training:
-            if labels is None:
-                raise ValueError("labels cannot be None")
+
+        if labels is not None:
             if regression_targets is None:
                 raise ValueError("regression_targets cannot be None")
             loss_classifier, loss_box_reg = fastrcnn_loss(class_logits, box_regression, labels, regression_targets)
