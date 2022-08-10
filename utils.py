@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 import cv2
 import torch
 from torch.optim.lr_scheduler import LambdaLR
@@ -79,3 +79,19 @@ def non_max_suppression(preds: dict, iou_threshold: float = 0.25, obj_score_thre
     keep_indices = nms(bboxes[objectness_mask], scores[objectness_mask], iou_threshold)
 
     return bboxes[keep_indices].detach().numpy(), labels[keep_indices].detach().numpy(), scores[keep_indices].detach().numpy()
+
+def create_img_for_plotting(img: np.array,
+                            inv_encoding: Dict[int, str],
+                            bboxes: np.ndarray,
+                            labels: np.ndarray,
+                            scores: np.ndarray):
+    img = img.copy()
+    for box, lbl, score in zip(bboxes.astype(int), labels, scores):
+        label = inv_encoding[lbl-1]
+        img = cv2.rectangle(img, box[:2], box[2:], (0,255,0), 2)
+
+        (w, h), _ = cv2.getTextSize(f"{label}: {score:.2f}", cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
+        img = cv2.rectangle(img, (box[0], box[1] - 20), (box[0] + w, box[1]), (0,255,0), -1)
+        img = cv2.putText(img,f"{label}: {score:.2f}", (box[0], box[1] - 5),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,0), 1)
+    return img
