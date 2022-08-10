@@ -87,7 +87,7 @@ def create_img_for_plotting(img: np.array,
                             scores: np.ndarray):
     img = img.copy()
     for box, lbl, score in zip(bboxes.astype(int), labels, scores):
-        label = inv_encoding[lbl-1]
+        label = inv_encoding[lbl]
         img = cv2.rectangle(img, box[:2], box[2:], (0,255,0), 2)
 
         (w, h), _ = cv2.getTextSize(f"{label}: {score:.2f}", cv2.FONT_HERSHEY_SIMPLEX, 0.6, 1)
