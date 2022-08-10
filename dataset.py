@@ -9,7 +9,11 @@ import cv2
 from torchvision.transforms import RandomGrayscale, GaussianBlur, ColorJitter, Compose, ToTensor
 
 class FaceMaskVOCDataset(Dataset):
-    def __init__(self, dataset: pd.DataFrame, out_width: int, out_height:int, training = True):
+    def __init__(self, dataset: pd.DataFrame,
+                 out_width: int,
+                 out_height:int,
+                 training = True,
+                 cache= False):
         self.dataset = dataset.reset_index(drop=True)
         self.out_width = out_width
         self.out_height = out_height
@@ -27,14 +31,20 @@ class FaceMaskVOCDataset(Dataset):
             ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5),
             GaussianNoise(std=0.5, p=0.05)
         ])
-
+        self.cache = cache
         self.training = training
+        if self.cache:
+            self.cache_memory = {}
 
 
     def __getitem__(self, idx: int):
         image_path, bboxes, labels= self.dataset.iloc[idx].values
-        image = cv2.imread(image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        #print(image_path)
+        if self.cache:
+            image = self._load_from_cache(image_path)
+        else:
+            image = cv2.imread(image_path)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         image, bboxes = resize_img_and_boxes(image, bboxes, (self.out_height, self.out_width))
 
@@ -74,6 +84,15 @@ class FaceMaskVOCDataset(Dataset):
         target["image_id"] = image_id
 
         return target
+
+    def _load_from_cache(self, image_path) -> np.ndarray:
+        if self.cache_memory.get(image_path, None) is not None:
+            image = self.cache_memory[image_path].copy()
+        else:
+            image = cv2.imread(image_path)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            self.cache_memory[image_path] = image.copy()
+        return image
 
     def __len__(self):
         return len(self.dataset)
