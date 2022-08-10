@@ -78,7 +78,7 @@ def non_max_suppression(preds: dict, iou_threshold: float = 0.25, obj_score_thre
     objectness_mask = scores>obj_score_thresh
     keep_indices = nms(bboxes[objectness_mask], scores[objectness_mask], iou_threshold)
 
-    return bboxes[keep_indices].detach().numpy(), labels[keep_indices].detach().numpy(), scores[keep_indices].detach().numpy()
+    return bboxes[keep_indices].detach().cpu().numpy(), labels[keep_indices].detach().cpu().numpy(), scores[keep_indices].detach().cpu().numpy()
 
 def create_img_for_plotting(img: np.array,
                             inv_encoding: Dict[int, str],
